@@ -1,7 +1,7 @@
- import React, { Component } from 'react';
+import React, { Component } from 'react';
 import {
-  StyleSheet,
-  View, TextInput,
+  StyleSheet, ScrollView,
+  View, TextInput, Image, TouchableOpacity, PixelRatio
 } from 'react-native';
 import {
   Text,
@@ -10,21 +10,68 @@ import {
   Input,
   Button,
 } from 'native-base';
+import Header from 'react-native/Libraries/NewAppScreen';
 import firebase from './config'
 import Form from 'react-native-form'
 import SignaturePad from 'react-native-signature-pad'
+import DatePicker from 'react-native-datepicker'
+import { ProgressSteps, ProgressStep } from 'react-native-progress-steps';
+import ImagePicker from 'react-native-image-picker';
 
 export default class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      firstName: "",
+      firstName: "",   
       lastName: "",
-      linkSignature: "",
+      signature: "",
+      date: "",
+      Email: "",
+      photo: [],
+      ImageSource: null,
+      data: null,
+      Image_TAG: '',
+      nomPhoto:"",
       isSoulSold: false
     };
-   
+
   }
+
+  selectPhotoTapped() {
+    const options = {
+      quality: 1.0,
+      maxWidth: 500,
+      maxHeight: 500,
+      storageOptions: {
+      skipBackup: true
+      }
+    };
+    
+    ImagePicker.showImagePicker(options, (response) => {
+      console.log('Response = ', response);
+ 
+      if (response.didCancel) {
+        console.log('User cancelled photo picker');
+      }
+      else if (response.error) {
+        console.log('ImagePicker Error: ', response.error);
+      }
+      else if (response.customButton) {
+        console.log('User tapped custom button: ', response.customButton);
+      }
+      else {
+        let source = { uri: response.uri };
+ 
+        this.setState({
+ 
+          ImageSource: source,
+          data: response.data
+ 
+        });
+      }
+    });
+  }
+
 
   _onLeaveMessage() {
     this._onConcact();
@@ -33,71 +80,44 @@ export default class App extends Component {
   async _onConcact() {
     var data = {
       firstName: this.state.firstName,
-      lastName: this.state.lastName
+      lastName: this.state.lastName,
+      signature: this.state.signature.base64DataUrl
     };
 
-    var dataA = {
-     linkCNI: "sss",
-     linkHomePlan: "ssss",
-     linkPicture: "sss",
-     linkRegisterDocument: "ssss",
-     linkSignature: this.state.linkSignature
-    }
+    /* var dataA = {
+      linkCNI: "sss",
+      linkHomePlan: "ssss",
+      linkPicture: "sss",
+      linkRegisterDocument: "ssss",
+      linkSignature: this.state.linkSignature
+    } */
 
 
-    if (this.state.firstName == '' || this.state.lastName == '' ) {
+    if (this.state.firstName == '' || this.state.lastName == '' || this.state.signature == '') {
       alert("Veuillez remplir tous les champs")
+      alert(this.state)
     }
     else {
       try {
-        return fetch('http://192.168.0.100:8080/api/v1/users',
+        alert(JSON.stringify(data))
+        return fetch('http://192.168.8.100:8088/api/v1/account',
           {
             method: "POST",
             headers: {
               "Accept": "application/json",
               "Content-Type": "application/json",
             },
+            
             body: JSON.stringify(data)
           }
         ).then((response) => response.json())
           .then((responseJson) => {
 
-            dataA.userId = responseJson.id;
-            alert(JSON.stringify(dataA))
+            //dataA.userId = responseJson.id;
+            alert(JSON.stringify(data))
             alert(JSON.stringify(responseJson))
             console.log('result', responseJson)
             alert("operation succefull");
-            
-            if ( this.state.linkSignature == '' ) {
-              alert("Veuillez remplir tous les champs")
-
-            }else {
-              try {
-                return fetch('http://192.168.0.100:8080/api/v1/account',
-                  {
-                    method: "POST",
-                    headers: {
-                      "Accept": "application/json",
-                      "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(dataA)
-                  }
-                ).then((response) => response.json())
-                  .then((responseJson) => {
-        
-                   // dataA.userId = responseJson.id;
-                    alert(JSON.stringify(dataA))
-                    alert(JSON.stringify(responseJson))
-                    console.log('result', responseJson)
-                    alert("operation succefull");
-        
-                  }
-                  );
-              }
-              catch (errors) {
-                alert("⛔Echec de creation de compte" + errors)
-              }
-            }
 
           }
           );
@@ -109,12 +129,15 @@ export default class App extends Component {
 
   }
 
-  signaturePadChange(base64String) {
+  signaturePadChange(base64DataUrl) {
     this.setState({
-     linkSignature : base64String
+      signature: base64DataUrl,
     })
-    //alert(JSON.stringify(base64DataUrl))
-    console.log('Base64', this.state.linkSignature.toDataURL("images/png"))
+    alert(JSON.stringify(base64DataUrl))
+    alert(JSON.stringify(this.state.signature.base64DataUrl))
+
+    
+    //console.log('Base64', this.state.linkSignature.toDataURL("images/png"))
   }
 
   signaturePadError(error) {
@@ -123,55 +146,127 @@ export default class App extends Component {
 
   render() {
     return (
+
       <View style={styles.container}>
-        {this.state.isSoulSold ? <View style={styles.formContainer}><Text>There is no way back...</Text></View> :
-          <View style={styles.formContainer}>
-            <Text style={styles.title}>
-              INSCRIPTION
-          </Text>
-            <Text style={styles.text}>
-              Mes Informations
-          </Text><Text></Text><Text></Text>
-            <TextInput style={styles.inputBox}
-              placeholder="firtName"
-              placeholderTextColor='#000'
-              selectionColor='#000'
-              keyboardType="default"
-              onSubmitEditing={() => this.firstName}
-              onChangeText={firstName => this.setState({ firstName })}
-            />
-            <TextInput style={styles.inputBox}
-              placeholder="lastName"
-              placeholderTextColor='#000'
-              selectionColor='#000'
-              keyboardType="default"
-              onSubmitEditing={() => this.lastName}
-              onChangeText={lastName => this.setState({ lastName })}
-            />
-            <View style={styles.linkSignature}>
-              <Label style={styles.signatureLabel}>Signature</Label>
-              <SignaturePad
-                onError={(error) => this.signaturePadError(error)}
-                onChange={(linkSignature) => this.signaturePadChange(linkSignature)}
-                style={styles.signaturePad}
-                onSubmitEditing={() => this.linkSignature}
+        <ProgressSteps>
+          <ProgressStep label="Etape 1">
+            
+              <Text style={styles.title}>
+                OUVERTURE DU COMPTE
+                            </Text>
+              <Text style={styles.text}>
+                Veillez remplir le formulaire
+                            </Text><Text></Text><Text></Text>
+              <TextInput style={styles.inputBox}
+                placeholder="firtName"
+                value={this.state.firstName}
+                placeholderTextColor='#000'
+                selectionColor='#000'
+                keyboardType="default"
+                onSubmitEditing={() => this.firstName}
+                onChangeText={firstName => this.setState({ firstName })}
               />
-            </View>
-            <Button Block primary onPress={this._onLeaveMessage.bind(this)} style={styles.button}><Text>SUBMIT</Text></Button>
-          </View>}
+              <TextInput style={styles.inputBox}
+              value={this.state.lastName}
+                placeholder="lastName"
+                placeholderTextColor='#000'
+                selectionColor='#000'
+                keyboardType="default"
+                onSubmitEditing={() => this.lastName}
+                onChangeText={lastName => this.setState({ lastName })}
+              />
+
+              <TextInput style={styles.inputBox}
+                placeholder="Email"
+                value={this.state.Email}
+                placeholderTextColor='#000'
+                selectionColor='#000'
+                keyboardType="default"
+                onSubmitEditing={() => this.Email}
+                onChangeText={Email => this.setState({ Email })}
+              />
+              <Text></Text><Text></Text>
+              <DatePicker
+                style={{ width: 200 }}
+                date={this.state.date}
+                mode="date"
+                placeholder="select date"
+                value={this.state.date}
+                format="YYYY-MM-DD"
+                minDate="2016-05-01"
+                maxDate="2016-06-01"
+                confirmBtnText="Confirm"
+                cancelBtnText="Cancel"
+                customStyles={{
+                  dateIcon: {
+                    position: 'absolute',
+                    left: 0,
+                    top: 4,
+                    marginLeft: 0
+                  },
+                  placeholderText: {
+                    color: '#0f0',
+                    fontSize: 20
+                  },
+                  dateInput: {
+                    marginLeft: 36,
+                    borderWidth: 0
+                  }
+                  // ... You can check the source to find the other keys.
+                }}
+                onDateChange={(date) => { this.setState({ date: date }) }}
+              />
+              <Text></Text><Text></Text>
+          </ProgressStep>
+
+          <ProgressStep label="Etape2">
+        <View style={styles.formContainer}>
+
+        <TouchableOpacity onPress={this.selectPhotoTapped.bind(this)}>
+           <View style={styles.ImageContainer}>
+            {this.state.ImageSource === null ? <Text>prendre une photo</Text> :
+              <Image style={styles.ImageContainer} source={this.state.ImageSource} />
+            }
+          </View>
+        </TouchableOpacity>
+        <TextInput 
+        placeholder="Selectionner une image "
+       // value={this.state.nomPhoto}
+        onChangeText={data => this.setState({ Image_TAG: data })} 
+        underlineColorAndroid='transparent'
+        style={styles.TextInputStyle}
+         />
+        </View>
+        </ProgressStep>
+
+          <ProgressStep label="Etape3" onSubmit={this._onLeaveMessage.bind(this)}>
+        <View style={styles.formContainer}>
+
+          <View style={styles.signature}>
+            <Label style={styles.signatureLabel}>Veillez signer</Label>
+            <SignaturePad
+              onError={(error) => this.signaturePadError(error)}
+              onChange={(signature) => this.signaturePadChange(signature)}
+              value={this.state.signature}
+              style={styles.signaturePad}
+              onSubmitEditing={() => this.signature}
+            />
+          </View>
+        </View>
+        </ProgressStep>
+        </ProgressSteps>
       </View>
+
     );
   }
 }
-
-
 
 
 const styles = StyleSheet.create({
   inputBox: {
     width: 200,
     height: 50,
-    backgroundColor: '#f0f',
+    backgroundColor: '#FFF0F5',
     borderRadius: 10,
     paddingHorizontal: 16,
     fontSize: 16,
@@ -184,6 +279,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5FCFF',
+    alignItems: 'center',
+   // backgroundColor: '#FFF8E1',
+    paddingTop: 20
   },
   formContainer: {
     flex: 1,
@@ -204,7 +302,7 @@ const styles = StyleSheet.create({
   form: {
     width: '80%'
   },
-  linkSignature: {
+  signature: {
     width: '100%',
     height: 150,
   },
@@ -227,8 +325,29 @@ const styles = StyleSheet.create({
   },
   signatureLabel: {
     marginLeft: 15, marginTop: 15
+  },
+  ImageContainer: {
+    borderRadius: 10,
+    width: 250,
+    height: 250,
+    borderColor: '#9B9B9B',
+    borderWidth: 1 / PixelRatio.get(),
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#CDDC39',
+ 
+  },
+  TextInputStyle: {
+ 
+    textAlign: 'center',
+    height: 40,
+    width: '80%',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#028b53',
+    marginTop: 20
   }
-}); 
+});
 
 
 
@@ -239,8 +358,8 @@ const styles = StyleSheet.create({
 
 
 
-/* 
-import React, { Component } from 'react';
+
+/* import React, { Component } from 'react';
 import {
   SafeAreaView,
   StyleSheet,
@@ -249,30 +368,33 @@ import {
   StatusBar,
   TouchableHighlight,
 } from 'react-native';
- 
+
 import SignatureCapture from 'react-native-signature-capture';
- 
+
 class App extends Component {
   saveSign = () => {
     this.refs['sign'].saveImage();
   };
- 
+
   resetSign = () => {
     this.refs['sign'].resetImage();
   };
- 
+
   _onSaveEvent = result => {
     //result.encoded - for the base64 encoded png
     //result.pathName - for the file path name
     alert('Signature Captured Successfully');
+    alert("picture", result.encoded);
+    alert("chemin", result.pathName);
     console.log("Signature", result.encoded);
+    console.log("Signature", result.pathName);
   };
- 
+
   _onDragEvent = () => {
     // This callback will be called when the user enters signature
     console.log('dragged');
   };
- 
+
   render() {
     return (
       <View style={{ flex: 1 }}>
@@ -290,6 +412,7 @@ class App extends Component {
                 onDragEvent={this._onDragEvent}
                 showNativeButtons={false}
                 showTitleLabel={false}
+                saveImageFileInExtStorage={false}
                 viewMode={'portrait'}
               />
               <View style={{ flexDirection: 'row' }}>
@@ -315,7 +438,7 @@ class App extends Component {
     );
   }
 }
- 
+
 const styles = StyleSheet.create({
   body: {
     flex: 1,
@@ -342,5 +465,5 @@ const styles = StyleSheet.create({
     margin: 10,
   },
 });
- 
-export default App; */
+
+export default App;  */
