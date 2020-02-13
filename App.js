@@ -26,11 +26,13 @@ export default class App extends Component {
       lastName: "",
       signature: "",
       date: "",
-      Email: "",
+      email: "",
       photo: [],
-      ImageSource: null,
+     // imageSource: null,
       data: null,
-      Image_TAG: '',
+      picture: null,
+      //image_TAG: '',
+      namePicture:'',
       nomPhoto:"",
       isSoulSold: false
     };
@@ -64,7 +66,7 @@ export default class App extends Component {
  
         this.setState({
  
-          ImageSource: source,
+          picture: source,
           data: response.data
  
         });
@@ -81,6 +83,11 @@ export default class App extends Component {
     var data = {
       firstName: this.state.firstName,
       lastName: this.state.lastName,
+      email: this.state.email,
+      date: this.state.date,
+      picture: this.state.data,
+      data: this.state.data,
+      namePicture: this.state.namePicture,
       signature: this.state.signature.base64DataUrl
     };
 
@@ -93,14 +100,14 @@ export default class App extends Component {
     } */
 
 
-    if (this.state.firstName == '' || this.state.lastName == '' || this.state.signature == '') {
+    if (this.state.firstName == '' || this.state.lastName == '' || this.state.signature == '' || this.state.picture == '') {
       alert("Veuillez remplir tous les champs")
       alert(this.state)
     }
     else {
       try {
         alert(JSON.stringify(data))
-        return fetch('http://192.168.8.100:8088/api/v1/account',
+        return fetch('http://192.168.8.101:8088/api/v1/account',
           {
             method: "POST",
             headers: {
@@ -133,8 +140,8 @@ export default class App extends Component {
     this.setState({
       signature: base64DataUrl,
     })
-    alert(JSON.stringify(base64DataUrl))
-    alert(JSON.stringify(this.state.signature.base64DataUrl))
+   // alert(JSON.stringify(base64DataUrl))
+   // alert(JSON.stringify(this.state.signature.base64DataUrl))
 
     
     //console.log('Base64', this.state.linkSignature.toDataURL("images/png"))
@@ -178,12 +185,12 @@ export default class App extends Component {
 
               <TextInput style={styles.inputBox}
                 placeholder="Email"
-                value={this.state.Email}
+                value={this.state.email}
                 placeholderTextColor='#000'
                 selectionColor='#000'
                 keyboardType="default"
-                onSubmitEditing={() => this.Email}
-                onChangeText={Email => this.setState({ Email })}
+                onSubmitEditing={() => this.email}
+                onChangeText={email => this.setState({ email })}
               />
               <Text></Text><Text></Text>
               <DatePicker
@@ -193,8 +200,9 @@ export default class App extends Component {
                 placeholder="select date"
                 value={this.state.date}
                 format="YYYY-MM-DD"
-                minDate="2016-05-01"
-                maxDate="2016-06-01"
+                //format="DD-MM-YYYY"
+                //minDate="2016-05-01"
+                //maxDate="2016-06-01"
                 confirmBtnText="Confirm"
                 cancelBtnText="Cancel"
                 customStyles={{
@@ -224,15 +232,16 @@ export default class App extends Component {
 
         <TouchableOpacity onPress={this.selectPhotoTapped.bind(this)}>
            <View style={styles.ImageContainer}>
-            {this.state.ImageSource === null ? <Text>prendre une photo</Text> :
-              <Image style={styles.ImageContainer} source={this.state.ImageSource} />
+            {this.state.picture === null ? <Text>prendre une photo</Text> :
+              <Image style={styles.ImageContainer} source={this.state.picture} />
             }
           </View>
         </TouchableOpacity>
         <TextInput 
-        placeholder="Selectionner une image "
+        placeholder="Nom de l'image "
        // value={this.state.nomPhoto}
-        onChangeText={data => this.setState({ Image_TAG: data })} 
+        onChangeText={data => this.setState({ namePicture: data })} 
+        value={this.state.namePicture}
         underlineColorAndroid='transparent'
         style={styles.TextInputStyle}
          />
